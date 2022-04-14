@@ -14,19 +14,27 @@ import {
 	} from './Styles'
 import {
 	QUERY_PRODUCTS,
-	ORDER,
+	ORDER_BUTTON_TEXT,
 	FAILED_AUTHENTICATE,
-	CARS
+	CARS,
+	API_URI,
+	ORDER_BUTTON,
+	ORDER_SUCCESS,
+	ORDER_ERROR
 } from '../Consts/Consts'
+import axios from 'axios';
 
+
+let productIds = [];
 
 function Products() {
 	const [state, setState] = useState();
 	const [toggleCheckBox, setToggleCheckBox] = useState([]);
+	const [token, setToken] = useState('');
 
 		useEffect(() => {
 			oauth.getAuthCredentials(
-					() => fetchData(), // already logged in
+					response => fetchData(response) , // already logged in
 					() => {
 						oauth.authenticate(
 							() => fetchData(),
@@ -35,29 +43,60 @@ function Products() {
 					});
 		}, [fetchData]);
 
-		const fetchData =  () => { 
+		const fetchData = (response) => { 
+			setToken(response.accessToken);
 			net.query(QUERY_PRODUCTS, response => setState(response.records));
 		};
 
-		const createAdress = (name) => {
+		const createAdressForImg = (name) => {
 			let result = CARS.map(item => {
 				return item[name];
 			});
 			return result.join('');  
-		}
+		};
+
+		const filterProductIds = (itemId) => {
+			if (!productIds.includes(itemId)) {
+				productIds.push(itemId);
+			} else {
+				productIds = productIds.filter(id => id != itemId);
+			}		
+		};
+
+		const productsFetch = (productIds) => {
+			axios.post(API_URI, { ...productIds }, {
+				headers: {
+						"Authorization": 'Bearer ' + token 
+					},
+			})
+			.then(response => {
+				if (response.status == 200) {
+					alert(ORDER_SUCCESS);
+					productIds = [];
+					setToggleCheckBox([]);
+				}
+			})
+			.catch(error => {
+				if (error) {
+					alert(ORDER_ERROR);
+					productIds = [];
+					setToggleCheckBox([]);
+				}
+			})
+		};
 
 		return (
 				<Container style={{height: '100%'}}>
 					<FlatList
 						data={state}
 						renderItem={({item, index}) => 
-						
 						<Card>
 							<CheckBox 
 								value={toggleCheckBox[index]}
 								onValueChange={newValue => setToggleCheckBox(oldValue => {
 									newValue = [...oldValue];
 									newValue[index] = !newValue[index] 
+									filterProductIds(item.Id);
 									return newValue;
 								})}
 							/>
@@ -65,21 +104,20 @@ function Products() {
 							<Image
 								key={index}
 								style={{ width: '50%', height: '250%', marginTop: '-9%'  }}
-								resizeMode='contain'
-								source={{uri : createAdress(item.Model__c.toLowerCase())}} 
+								source={{uri : createAdressForImg(item.Model__c.toLowerCase())}}  
 							/>	
 							<ItemPrice>{`${item.Price__c} $`}</ItemPrice>
-							
 						</Card>
 						}
 						keyExtractor={(item, index) => 'key_' + index} 
 					/>
 
 					<Button
-						title={ORDER}
-						color="#841584"
+						title={ORDER_BUTTON_TEXT}
+						color={ORDER_BUTTON}
+						onPress={() => productsFetch(productIds)}
 					/>
-				</Container>
+				</Container> 
 			);
 	};
 

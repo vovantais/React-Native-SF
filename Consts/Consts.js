@@ -1,6 +1,13 @@
 export const QUERY_PRODUCTS = "SELECT Id, Name, IsActive, Cost__c, Model__c, Price__c, Year__c, Family FROM Product2 WHERE Family='auto' AND IsActive = true";
-export const ORDER = 'Order';
+
+export const ORDER_BUTTON_TEXT = 'Order';
+export const ORDER_SUCCESS = 'Order successful case created in Salesforse!';
+export const ORDER_ERROR = 'An error occurred, notify the administrator!';
 export const FAILED_AUTHENTICATE = 'Failed to authenticate: '; 
+export const ORDER_BUTTON = '#841584';
+
+export const API_URI = 'https://senla-a-dev-ed.my.salesforce.com/services/apexrest/CreateCases';
+
 
 export const CARS = [
 	{
